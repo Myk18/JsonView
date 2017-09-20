@@ -51,7 +51,6 @@ public class ConfigActivity extends Activity {
 
         responseTV = (TextView)findViewById(R.id.mytext_response);
 
-
         server = (EditText)findViewById(R.id.mytext_server);
         apikey = (EditText)findViewById(R.id.mytext_apikey);
         startitem = (EditText)findViewById(R.id.mytext_startitem);
@@ -59,11 +58,8 @@ public class ConfigActivity extends Activity {
         setserver = (EditText)findViewById(R.id.mytext_setserver);
 
         server.setText(getString(R.string.server));
-
         apikey.setText(getString(R.string.ws_key));
-
         startitem.setText(getString(R.string.start_item));
-
         startnum.setText(getString(R.string.start_num));
 
         if ( !TextUtils.isEmpty(getPref("setserver")) ) setserver.setText(getPref("setserver"));
@@ -81,31 +77,22 @@ public class ConfigActivity extends Activity {
             }
         });
 
-
-
-
         bsave = (Button) findViewById(R.id.mybutton_save);
         bsave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                String prefserver = server.getText().toString();
-                setPref("server", prefserver);
-
-                String prefapikey = apikey.getText().toString();
-                setPref("apikey", prefapikey);
-
-                String prefcategory = startitem.getText().toString();
-                setPref("category", prefcategory);
-
-                String prefnum = startnum.getText().toString();
-                setPref("num", prefnum);
-
+                setPref("server", server.getText().toString());
+                setPref("apikey", apikey.getText().toString());
+                setPref("category", startitem.getText().toString());
+                setPref("num", startnum.getText().toString());
 
                 serverurl = server.getText() +"/"+ startitem.getText() + "/" + startnum.getText() + "?"+ "ws_key=" + apikey.getText() + "&" + getString(R.string.json_par);
                 setPref("setserver", serverurl);
 
-                if (getPref("setserver") != serverurl) { System.out.println("ok");};
+                if (getPref("setserver") != serverurl) {
+                    System.out.println("not_ok");
+                }
                 System.out.println("Saved");
                 //Intent openintent = new Intent(ConfigActivity.this, MainActivity.class);
                 //startActivity(openintent);
@@ -122,13 +109,13 @@ public class ConfigActivity extends Activity {
 
                 serverurl = server.getText() +"/"+ startitem.getText()+ "/" + startnum.getText() + "?"+ "ws_key=" + apikey.getText() + "&" + getString(R.string.json_par);
 
-                strFromUrlToTV(serverurl, responseTV);
+                checkFunc(serverurl, responseTV);
 
             }
         });
     }
 
-    private void strFromUrlToTV(String url,final TextView t) {
+    private void checkFunc(String url,final TextView t) {
 
         // Tag used to cancel the request
         String  tag_string_req = "string_req";

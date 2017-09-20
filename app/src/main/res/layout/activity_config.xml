@@ -27,7 +27,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
-        android:hint="Start item"
+        android:hint="Start category"
+        android:inputType="textPersonName"/>
+
+    <EditText
+        android:id="@+id/mytext_startnum"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="Start num"
         android:inputType="textPersonName"/>
 
     <EditText

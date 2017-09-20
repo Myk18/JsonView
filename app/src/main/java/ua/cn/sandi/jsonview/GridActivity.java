@@ -30,11 +30,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 
 import static android.preference.PreferenceManager.getDefaultSharedPreferences;
 import static com.android.volley.VolleyLog.TAG;
@@ -51,6 +53,8 @@ public class GridActivity extends Activity {
     Button bexit;
 
     TextView responsegrid;
+
+    TextView head;
 
     public String serverresponse;
 
@@ -69,6 +73,7 @@ public class GridActivity extends Activity {
         setContentView(R.layout.activity_grid);
 
         responsegrid = (TextView) findViewById(R.id.mytext_responsegrid);
+        head = (TextView) findViewById(R.id.mytext_head);
 
         grid = (ListView) findViewById(R.id.mylist_grid);
 
@@ -87,12 +92,14 @@ public class GridActivity extends Activity {
             public void onClick(View v) {
                 // code here
 
-                String url = getString(R.string.setserver);
+            //    String url = getString(R.string.setserver);
 
-                if (!TextUtils.isEmpty(getPref("setserver"))) url = getPref("setserver") ;
+            //    if (!TextUtils.isEmpty(getPref("setserver"))) url = getPref("setserver") ;
 
-                //  request here
-                makeJsonStringRequest(url, responsegrid);
+                //  request here    WORKING
+            //    makeJsonObjectRequest(url);
+
+                openItem("orders","0");
 
                 Log.d(TAG, "ok");
             }
@@ -109,79 +116,85 @@ public class GridActivity extends Activity {
         });
     }
 
+    private void openItem(String cat, String num){
 
-    private void makeJsonStringRequest(String url,final TextView t) {
+     //   String url = getString(R.string.setserver);
+     //   if (!TextUtils.isEmpty(getPref("setserver"))) url = getPref("setserver") ;
+     //   String url1 = getPref("prefsetserver") + "/" + getPref("prefcategory") + "/" + getPref("prefnum") + "?"+ "ws_key=" + getPref("preapikey") + "&" + getString(R.string.json_par);
+        String url1 = "";
 
-        String  tag_string_req = "string_req";
+        switch (cat) {
+            case "orders": {
+                url1 = getPref("server") + "/" + "orders" + "?" + "ws_key=" + getPref("apikey") + "&" + getString(R.string.json_par);
+                break;
+            }
+            case "order":{
+                url1 = getPref("server") + "/" + "orders" + "/" + num + "?"+ "ws_key=" + getPref("apikey") + "&" + getString(R.string.json_par);
+                break;
+            }
+        }
 
-        StringRequest strReq = new StringRequest(
-                Request.Method.GET,
-                url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
+        makeJsonObjectRequest(url1);
 
-                        Log.d(TAG, response);
-                        // code here
-                        serverresponse = response;
-
-                        WebService ws = new WebService();
-                        ws.inputstr = serverresponse;
-                        ws.parseStr(serverresponse);
-
-                        String text1 = ws.getorders();
-                        text2 = ws.getordersids();
-
-                        // render text
-                        t.setText(text1);
-
-                        renderlist(grid,text2);
-
-                        Log.d(TAG, "1");
-                    }},
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        VolleyLog.d(TAG, "Error: " + error.getMessage());
-                        Log.d(TAG, "Error: " + error.getMessage());}
-                });
-
-        // Adding request to request queue
-        ApplicationController.getInstance().addToRequestQueue(strReq, tag_string_req);
     }
 
-    private void renderlist(ListView v,List<Integer> l) {
+    private void str2render(String str) {
 
-                final String ATTRIBUTE_NAME_TEXT = "text";
-                final String ATTRIBUTE_NAME_IMAGE = "image";
-                int img = R.mipmap.ic_launcher;
+        WebService ws = new WebService();
+        ws.inputstr = str;
+        ws.parseStr(str);
 
-                int[] array1 = new int[l.size()];
-                for(int i = 0; i < l.size(); i++) { array1[i] = l.get(i); }
+        //String text1 = ws.getorders();
+        text2 = ws.getordersids();
 
-                ArrayList<Map<String, Object>> data = new ArrayList<Map<String, Object>>(
-                        array1.length);
-                Map<String, Object> m;
+        renderSlist(grid, text2);
 
-                for (int i = 0; i < array1.length; i++) {
-                    m = new HashMap<String, Object>();
-                    m.put(ATTRIBUTE_NAME_TEXT, array1[i]);
-                    m.put(ATTRIBUTE_NAME_IMAGE, img);
-                    data.add(m);
-                }
+    }
 
-                // массив имен атрибутов, из которых будут читаться данные
-                String[] from = {ATTRIBUTE_NAME_TEXT, ATTRIBUTE_NAME_IMAGE};
-                // массив ID View-компонентов, в которые будут вставлять данные
-                int[] to = {R.id.textView1, R.id.ivImg};
+    private void renderSlist(ListView v,List<Integer> l) {
 
-                SimpleAdapter adap = new SimpleAdapter(this, data, R.layout.item_list2, from, to);
+        final String ATTRIBUTE_NAME_TEXT = "text";
+        final String ATTRIBUTE_NAME_IMAGE = "image";
+        int img = R.mipmap.ic_launcher;
 
-        v.setAdapter(adap);
+        int[] array1 = new int[l.size()];
+        for(int i = 0; i < l.size(); i++) { array1[i] = l.get(i); }
+
+        ArrayList<Map<String, Object>> data = new ArrayList<Map<String, Object>>(array1.length);
+        Map<String, Object> m;
+
+        for (int i = 0; i < array1.length; i++) {
+            m = new HashMap<String, Object>();
+            m.put(ATTRIBUTE_NAME_TEXT, array1[i]);
+            m.put(ATTRIBUTE_NAME_IMAGE, img);
+            data.add(m);
+        }
+
+        // массив имен атрибутов, из которых будут читаться данные
+        String[] from = {ATTRIBUTE_NAME_TEXT, ATTRIBUTE_NAME_IMAGE};
+        // массив ID View-компонентов, в которые будут вставлять данные
+        int[] to = {R.id.textView1, R.id.ivImg};
+
+        SimpleAdapter adaptor = new SimpleAdapter(this, data, R.layout.item_list2, from, to);
+
+        v.setAdapter(adaptor);
 
         v.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                String item = (String) ((ListView) parent).getAdapter().getItem(position).toString();
+
+                //  Toast.makeText(GridActivity.this, item + " выбран", Toast.LENGTH_LONG).show();
+
+                HashMap<String, Object> obj = (HashMap<String, Object>) ((ListView) parent).getAdapter().getItem(position);
+
+                String text = obj.get("text").toString();
+
+                Toast.makeText(GridActivity.this, text + " выбран", Toast.LENGTH_LONG).show();
+
                 Log.d(LOG_TAG, "itemClick: position = " + position + ", id = " + id);
+
             }
         });
 
@@ -210,6 +223,149 @@ public class GridActivity extends Activity {
 
     }
 
+    private void renderJlist(ListView v,ArrayList<Map<String, Object>> data) {
+
+        final String ATTRIBUTE_NAME_TEXT = "id";
+        final String ATTRIBUTE_NAME_IMAGE = "image";
+        String[] from = {ATTRIBUTE_NAME_TEXT, ATTRIBUTE_NAME_IMAGE};
+
+        int[] to = {R.id.textView1, R.id.ivImg};
+
+        SimpleAdapter adaptor = new SimpleAdapter(this, data, R.layout.item_list2, from, to);
+
+        v.setAdapter(adaptor);
+
+        v.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                String item = (String) ((ListView) parent).getAdapter().getItem(position).toString();
+
+                //  Toast.makeText(GridActivity.this, item + " выбран", Toast.LENGTH_LONG).show();
+
+                HashMap<String, Object> obj = (HashMap<String, Object>) ((ListView) parent).getAdapter().getItem(position);
+
+                Log.d(LOG_TAG, "itemClick: position = " + position + ", id = " + id);
+                String text = obj.get("id").toString();
+
+                Toast.makeText(GridActivity.this, text + " выбран", Toast.LENGTH_LONG).show();
+                // TODO: go to order
+                openItem("order", text);
+
+            }
+        });
+
+        v.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                Log.d(LOG_TAG, "itemSelect: position = " + position + ", id = " + id);
+            }
+
+            public void onNothingSelected(AdapterView<?> parent) {
+                Log.d(LOG_TAG, "itemSelect: nothing");
+            }
+        });
+
+        v.setOnScrollListener(new AbsListView.OnScrollListener() {
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+                // Log.d(LOG_TAG, "scrollState = " + scrollState);
+            }
+
+            public void onScroll(AbsListView view, int firstVisibleItem,
+                                 int visibleItemCount, int totalItemCount) {
+                Log.d(LOG_TAG, "scroll: firstVisibleItem = " + firstVisibleItem
+                        + ", visibleItemCount" + visibleItemCount
+                        + ", totalItemCount" + totalItemCount);
+            }
+        });
+
+    }
+
+    private void renderJorder(ListView v,ArrayList<Map<String, Object>> data) {
+
+        final String ATTRIBUTE_NAME_KEY = "key";
+        final String ATTRIBUTE_NAME_VALUE = "value";
+        final String ATTRIBUTE_NAME_IMAGE = "image";
+        String[] from = {ATTRIBUTE_NAME_IMAGE, ATTRIBUTE_NAME_KEY, ATTRIBUTE_NAME_VALUE};
+
+        int[] to = {R.id.ivImg, R.id.textView1, R.id.textView2};
+
+        SimpleAdapter adaptor = new SimpleAdapter(this, data, R.layout.item_order, from, to);
+
+        v.setAdapter(adaptor);
+
+        v.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                String item = (String) ((ListView) parent).getAdapter().getItem(position).toString();
+
+                //  Toast.makeText(GridActivity.this, item + " выбран", Toast.LENGTH_LONG).show();
+
+                HashMap<String, Object> obj = (HashMap<String, Object>) ((ListView) parent).getAdapter().getItem(position);
+
+                String text = obj.get("key").toString();
+
+                Toast.makeText(GridActivity.this, text + " выбран", Toast.LENGTH_LONG).show();
+
+                Log.d(LOG_TAG, "itemClick: position = " + position + ", id = " + id);
+
+            }
+        });
+
+        v.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                Log.d(LOG_TAG, "itemSelect: position = " + position + ", id = " + id);
+            }
+
+            public void onNothingSelected(AdapterView<?> parent) {
+                Log.d(LOG_TAG, "itemSelect: nothing");
+            }
+        });
+
+        v.setOnScrollListener(new AbsListView.OnScrollListener() {
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+                // Log.d(LOG_TAG, "scrollState = " + scrollState);
+            }
+
+            public void onScroll(AbsListView view, int firstVisibleItem,
+                                 int visibleItemCount, int totalItemCount) {
+                Log.d(LOG_TAG, "scroll: firstVisibleItem = " + firstVisibleItem
+                        + ", visibleItemCount" + visibleItemCount
+                        + ", totalItemCount" + totalItemCount);
+            }
+        });
+
+    }
+
+    private void makeJsonStringRequest(String url,final TextView t) {
+
+        String  tag_string_req = "string_req";
+
+        StringRequest strReq = new StringRequest(
+                Request.Method.GET,
+                url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+
+                        Log.d(TAG, response);
+
+                        // code here
+                        str2render(response);
+
+                        Log.d(TAG, "1");
+                    }},
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        VolleyLog.d(TAG, "Error: " + error.getMessage());
+                        Log.d(TAG, "Error: " + error.getMessage());}
+                });
+
+        // Adding request to request queue
+        ApplicationController.getInstance().addToRequestQueue(strReq, tag_string_req);
+    }
+
     private void makeJsonArrayRequest(String url, final TextView t) {
 
         JsonArrayRequest req = new JsonArrayRequest(url,
@@ -221,7 +377,6 @@ public class GridActivity extends Activity {
                         try {
                             // Parsing json array response
                             // loop through each json object
-
 
 
                             String jsonResponse = "";
@@ -244,6 +399,7 @@ public class GridActivity extends Activity {
 
                     }
                 }, new Response.ErrorListener() {
+
             @Override
             public void onErrorResponse(VolleyError error) {
                 VolleyLog.d(TAG, "Error: " + error.getMessage());
@@ -257,49 +413,51 @@ public class GridActivity extends Activity {
         ApplicationController.getInstance().addToRequestQueue(req);
     }
 
-    private void makeJsonObjectRequest(String url, final TextView t) {
+    private void makeJsonObjectRequest(String url) {
 
     //    showDialog();
 
-        JsonObjectRequest jsonObjReq = new JsonObjectRequest(Request.Method.GET,
-                url, null, new Response.Listener<JSONObject>() {
+        JsonObjectRequest jsonObjReq = new JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                new Response.Listener<JSONObject>() {
 
-            @Override
-            public void onResponse(JSONObject response) {
-                Log.d(TAG, response.toString());
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        Log.d(TAG, response.toString());
 
-                try {
+                        try {
 
-                    String name = response.getString("orders");
-                    String jsonResponse = "";
-                    jsonResponse += "orders: " + name + "\n\n";
-                    t.setText(jsonResponse);
+                            if (response.has("orders")) {
+                                head.setText("Orders");
+                                JSONArray orders = response.getJSONArray("orders");
+                                renderJlist(grid, jsonarrayy2list(orders));
 
-                    JSONAdapter adap = new JSONAdapter(GridActivity.this, response.getJSONArray("orders") );
+                            } else if(response.has("order")) {
+                                head.setText("Order");
+                                JSONObject order = response.getJSONObject("order");
+                                renderJorder(grid, jsonarrayy2order(order));
+                            }
 
-                    grid.setAdapter(adap);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                            Toast.makeText(getApplicationContext(),
+                                    "Error: " + e.getMessage(),
+                                    Toast.LENGTH_LONG).show();
+                        }
+                        // hidepDialog();
+                    }},
+                new Response.ErrorListener() {
 
-
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    Toast.makeText(getApplicationContext(),
-                            "Error: " + e.getMessage(),
-                            Toast.LENGTH_LONG).show();
-                }
-    //            hidepDialog();
-            }
-        }, new Response.ErrorListener() {
-
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                VolleyLog.d(TAG, "Error: " + error.getMessage());
-                Toast.makeText(getApplicationContext(),
-                        error.getMessage(), Toast.LENGTH_SHORT).show();
-                // hide the progress dialog
-     //           hidepDialog();
-            }
-        });
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        VolleyLog.d(TAG, "Error: " + error.getMessage());
+                        Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+                        // hide the progress dialog
+                        // hidepDialog();
+                    }
+                });
 
         // Adding request to request queue
         ApplicationController.getInstance().addToRequestQueue(jsonObjReq);
@@ -309,6 +467,112 @@ public class GridActivity extends Activity {
         SharedPreferences prefs = getDefaultSharedPreferences(getApplicationContext());
         return prefs.getString(key, "");
     }
+
+    private ArrayList<Map<String, Object>> jsonarrayy2list(JSONArray j){
+
+        ArrayList<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
+        Map<String, Object> m;
+        int img = R.mipmap.ic_launcher;
+        final String ATTRIBUTE_NAME_IMAGE = "image";
+        final String ATTRIBUTE_NAME_TEXT = "id";
+
+        if (j != null) {
+            int len = j.length();
+            for (int i=0;i<len;i++){
+
+                Object itemtext = new Object();
+                try {
+                    itemtext = j.getJSONObject(i).get("id");
+                }catch (JSONException e) {
+                    e.printStackTrace();
+                    Toast.makeText(getApplicationContext(),
+                            "Error: " + e.getMessage(),
+                            Toast.LENGTH_LONG).show();
+                }
+
+                m = new HashMap<String, Object>();
+                m.put(ATTRIBUTE_NAME_TEXT, itemtext);
+                m.put(ATTRIBUTE_NAME_IMAGE, img);
+
+                list.add(i, m);
+            }
+        }
+
+        return list;
+
+    }
+
+    private ArrayList<Map<String, Object>> jsonarrayy2order(JSONObject j){
+
+        ArrayList<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
+        Map<String, Object> m;
+        int img = R.mipmap.ic_launcher;
+        final String ATTRIBUTE_NAME_IMAGE = "image";
+        final String ATTRIBUTE_NAME_KEY = "key";
+        final String ATTRIBUTE_NAME_VALUE = "value";
+
+        Object itemvalue = new Object();
+
+        String[] arr = {"id","reference","id_cart","id_customer","shipping_number","payment","total_paid","total_shipping","secure_key","delivery_date","mobile_theme","id_carrier","id_currency"};
+
+        int i=0;
+
+        for (String it: arr) {
+
+                try {
+                    itemvalue = j.get(it);
+                }catch(JSONException e){
+                    Log.d(TAG, e.getMessage());
+                }
+
+                m = new HashMap<String, Object>();
+                m.put(ATTRIBUTE_NAME_IMAGE, img);
+                m.put(ATTRIBUTE_NAME_KEY, it);
+                m.put(ATTRIBUTE_NAME_VALUE, itemvalue);
+
+                list.add(i, m);
+                i++;
+
+        }
+
+        return list;
+
+    }
+
+    private void makeJsonObjectRequestfunc(String url) {
+
+        JsonObjectRequest jsonObjReq = new JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        Log.d(TAG, response.toString());
+                        try {
+                            JSONArray orders = response.getJSONArray("orders");
+                            renderJlist(grid, jsonarrayy2list(orders));
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                            Toast.makeText(getApplicationContext(),
+                                    "Error: " + e.getMessage(),
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    }},
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        VolleyLog.d(TAG, "Error: " + error.getMessage());
+                        Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+        // Adding request to request queue
+        ApplicationController.getInstance().addToRequestQueue(jsonObjReq);
+
+    }
+
 }
 
 

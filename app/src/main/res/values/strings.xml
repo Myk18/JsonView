@@ -4,5 +4,6 @@
     <string name="ws_key">13K2K4P6H4YVLZ81ZKEA5SC4MIP911S1</string>
     <string name="json_par">output_format=JSON</string>
     <string name="start_item">orders</string>
+    <string name="start_num"></string>
     <string name="setserver">http://mag.sandi.cn.ua/api/orders?ws_key=13K2K4P6H4YVLZ81ZKEA5SC4MIP911S1&amp;output_format=JSON</string>
 </resources>

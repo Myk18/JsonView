@@ -45,7 +45,6 @@ public class MainActivity extends Activity {
                 finish();
                 moveTaskToBack(true);
 
-
             }
         });
         bopen = (Button) findViewById(R.id.mybutton_grid);

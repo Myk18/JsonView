@@ -17,6 +17,7 @@ class JSONAdapter extends BaseAdapter implements ListAdapter {
 
     private final Activity activity;
     private final JSONArray jsonArray;
+
     JSONAdapter(Activity activity, JSONArray jsonArray) {
         assert activity != null;
         assert jsonArray != null;
@@ -25,14 +26,11 @@ class JSONAdapter extends BaseAdapter implements ListAdapter {
         this.activity = activity;
     }
 
-
     @Override public int getCount() {
-
         return jsonArray.length();
     }
 
     @Override public JSONObject getItem(int position) {
-
         return jsonArray.optJSONObject(position);
     }
 
@@ -43,7 +41,6 @@ class JSONAdapter extends BaseAdapter implements ListAdapter {
     }
 
     @Override public View getView(int position, View convertView, ViewGroup parent) {
-
         JSONObject jsonObject = getItem(position);
 
         return convertView;

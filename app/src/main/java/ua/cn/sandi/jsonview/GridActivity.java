@@ -29,6 +29,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import static android.preference.PreferenceManager.getDefaultSharedPreferences;
@@ -52,7 +53,6 @@ public class GridActivity extends Activity {
     ListView grid;
 
     String LOG_TAG = "test";
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,7 +82,7 @@ public class GridActivity extends Activity {
                 //  request here    WORKING OLD
                 //  makeJsonObjectRequest(url);
 
-                openItem("","","root");
+                openItem("root", "","");
 
                 Log.d(TAG, "ok");
             }
@@ -99,7 +99,7 @@ public class GridActivity extends Activity {
         });
     }
 
-    private void openItem(String cat, String num, String type){
+    private void openItem(String type, String cat, String num){
 
      //   String url = getString(R.string.setserver);
      //   if (!TextUtils.isEmpty(getPref("setserver"))) url = getPref("setserver") ;
@@ -136,35 +136,25 @@ public class GridActivity extends Activity {
 
                     @Override
                     public void onResponse(JSONObject response) {
-                        //Log.d(TAG, response.toString());
+                        Log.d(TAG, response.toString());
 
                         try {
                             switch (type) {
-                                case "root":   // root case
+                                case "root":   // root case   response = array     dont work
                                     head.setText("Root");
                                     JSONArray orders = response.getJSONArray("");
                                     renderJlist(grid, jsonarrayy2list(orders));
                                     break;
-                                case "category":
+                                case "category":   //  all ok
                                     head.setText(cat);
                                     JSONArray catarray = response.getJSONArray(cat);
                                     renderJlist(grid, jsonarrayy2list(catarray));
                                     break;
                                 case "item":
                                     head.setText(cat);
-                                    if (cat.equals("orders")) {
-                                        JSONObject orditemobj = response.getJSONObject("order");
-                                        renderJitem(grid, jsonarrayy2order(orditemobj));
-                                        break;
-                                    } else if(cat.equals("products")) {
-                                        JSONObject orditemobj = response.getJSONObject("product");
-                                        renderJitem(grid, jsonarrayy2order(orditemobj));
-                                        break;
-                                    } else {
-                                        JSONObject orditemobj = response.getJSONObject(cat);
-                                        renderJitem(grid, jsonarrayy2order(orditemobj));
-                                        break;
-                                    }
+                                    JSONObject orditemobj = response.getJSONObject(response.keys().next().toString());
+                                    renderJitem(grid, jsonarrayy2item(orditemobj));
+                                    break;
                             }
                         }catch (JSONException e) {
                             Log.d(TAG, e.getMessage());
@@ -179,8 +169,6 @@ public class GridActivity extends Activity {
                         Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
-
-        // Adding request to request queue
         ApplicationController.getInstance().addToRequestQueue(jsonObjReq);
     }   //   key set
 
@@ -195,7 +183,6 @@ public class GridActivity extends Activity {
                         try {
                             head.setText("Root");
                             renderJlist(grid, jsonarrayy2root(response));
-
                         } catch (Exception e) {
                             e.printStackTrace();
                             Toast.makeText(getApplicationContext(),
@@ -209,7 +196,6 @@ public class GridActivity extends Activity {
                 VolleyLog.d(TAG, "Error: " + error.getMessage());
                 Toast.makeText(getApplicationContext(),
                         error.getMessage(), Toast.LENGTH_SHORT).show();
-
             }
         });
         ApplicationController.getInstance().addToRequestQueue(arrreq);
@@ -244,9 +230,9 @@ public class GridActivity extends Activity {
 
 
                 if (head.getText().toString() == "Root") {
-                    openItem(idt, "", "category");
+                    openItem("category", idt, "");
                 } else {
-                    openItem(head.getText().toString(), idt, "item");
+                    openItem("item", head.getText().toString(), idt);
                 }
             }
         });
@@ -281,11 +267,19 @@ public class GridActivity extends Activity {
         final String ATTRIBUTE_NAME_KEY = "key";
         final String ATTRIBUTE_NAME_VALUE = "value";
         final String ATTRIBUTE_NAME_IMAGE = "image";
+
         String[] from = {ATTRIBUTE_NAME_IMAGE, ATTRIBUTE_NAME_KEY, ATTRIBUTE_NAME_VALUE};
-
         int[] to = {R.id.ivImg, R.id.textView1, R.id.textView2};
-
         SimpleAdapter adaptor = new SimpleAdapter(this, data, R.layout.item_order, from, to);
+
+        //final String ATTRIBUTE_NAME_PICTURE = "picture";
+        //final String ATTRIBUTE_NAME_NAME = "name";
+        //final String ATTRIBUTE_NAME_PRICE = "price";
+
+        //String[] from = {ATTRIBUTE_NAME_PICTURE, ATTRIBUTE_NAME_NAME, ATTRIBUTE_NAME_PRICE};
+        //int[] to = {R.id.picture, R.id.product_name, R.id.price};
+        //SimpleAdapter adaptor = new SimpleAdapter(this, data, R.layout.item_product, from, to);
+
 
         v.setAdapter(adaptor);
 
@@ -366,7 +360,7 @@ public class GridActivity extends Activity {
 
     }
 
-    private ArrayList<Map<String, Object>> jsonarrayy2order(JSONObject j){
+    private ArrayList<Map<String, Object>> jsonarrayy2item(JSONObject j){
 
         ArrayList<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
         Map<String, Object> m;
@@ -375,38 +369,83 @@ public class GridActivity extends Activity {
         final String ATTRIBUTE_NAME_KEY = "key";
         final String ATTRIBUTE_NAME_VALUE = "value";
 
-        Object itemvalue = new Object();
-
-        String[] arr = {"id","reference","id_cart","id_customer","shipping_number","payment","total_paid","total_shipping","secure_key","delivery_date","mobile_theme","id_carrier","id_currency"};
+        Object itemvalue = new Object();  // try init
 
         int i=0;
 
-        for (String it: arr) {
+        Iterator<String> iter = j.keys();
+
+        while(iter.hasNext()){
+
+            String it = iter.next();
+
+            try {
+                itemvalue = j.get(it);
+
+                m = new HashMap<>();
+                m.put(ATTRIBUTE_NAME_IMAGE, img);
+                m.put(ATTRIBUTE_NAME_KEY, it);
+                m.put(ATTRIBUTE_NAME_VALUE, itemvalue);
+
+                list.add(i, m);
+                i++;
+
+            }catch(JSONException e){
+                Log.d(TAG, e.getMessage());
+            }
+        }
+        return list;
+    }
+
+    private ArrayList<Map<String, Object>> jsonarrayy2product(JSONObject j){
+
+        ArrayList<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
+        Map<String, Object> m;
+        int varpicture = R.mipmap.ic_launcher;
+
+        final String ATTRIBUTE_NAME_PICTURE = "picture";
+        final String ATTRIBUTE_NAME_NAME = "name";
+        final String ATTRIBUTE_NAME_PRICE = "price";
+
+        String varname = "";
+        String varprice = "";
+
+        Object itemvalue = new Object();  // try init
+
+        Iterator<String> iter = j.keys();
+
+        while(iter.hasNext()){
+
+            String it = iter.next();
+
+            if (it == "product_name") {
+
+                m = new HashMap<>();
+                m.put(ATTRIBUTE_NAME_PICTURE, varpicture);
+                m.put(ATTRIBUTE_NAME_NAME, varname);
+                m.put(ATTRIBUTE_NAME_PRICE, varprice);
+
+                list.add(1, m);
 
                 try {
                     itemvalue = j.get(it);
-
-                    m = new HashMap<String, Object>();
-                    m.put(ATTRIBUTE_NAME_IMAGE, img);
-                    m.put(ATTRIBUTE_NAME_KEY, it);
-                    m.put(ATTRIBUTE_NAME_VALUE, itemvalue);
-
-                    list.add(i, m);
-                    i++;
-
-                }catch(JSONException e){
+                } catch (JSONException e) {
                     Log.d(TAG, e.getMessage());
                 }
+            }
+
         }
 
-        return list;
 
+
+        return list;
     }
 
     private ArrayList<Map<String, Object>> jsonarrayy2root(JSONArray j){
 
         ArrayList<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
         Map<String, Object> m;
+
         int img = R.mipmap.ic_launcher;
         final String ATTRIBUTE_NAME_IMAGE = "image";
         final String ATTRIBUTE_NAME_TEXT = "id";
